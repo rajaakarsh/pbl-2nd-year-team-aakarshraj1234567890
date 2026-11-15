@@ -6,7 +6,7 @@
 #include "Bmp.hpp"
 
 #include <cstdint>
-#include <cstdlib>  // std::abs
+#include <cstdlib>  
 #include <string>
 #include <vector>
 

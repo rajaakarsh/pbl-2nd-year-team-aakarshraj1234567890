@@ -32,28 +32,27 @@ void Image::read(const std::string& filename) {
         throw std::runtime_error("Only uncompressed BMPs are supported: " + filename);
     }
 
-    // --- Determine dimensions -----------------------------------------------
+ 
     const int32_t w = width();
     const int32_t h = height();
     const bool    topDown = (infoHeader_.biHeight < 0);
     const int     padding = paddingBytes();
 
-    // --- Seek past any extended header bytes (V4/V5 BMPs) -------------------
+    
     file.seekg(fileHeader_.bfOffBits, std::ios::beg);
 
-    // --- Dynamic 2D Heap Vector allocation ----------------------------------
+    
     pixels_.assign(static_cast<std::size_t>(h),
                    std::vector<RGBTRIPLE>(static_cast<std::size_t>(w)));
 
     for (int32_t row = 0; row < h; ++row) {
-        // BMP stores bottom-up by default; we always store top-down internally.
+      
         const int32_t targetRow = topDown ? row : (h - 1 - row);
 
         file.read(reinterpret_cast<char*>(
                       pixels_[static_cast<std::size_t>(targetRow)].data()),
                   w * static_cast<std::streamsize>(sizeof(RGBTRIPLE)));
 
-        // Skip scanline padding bytes.
         file.seekg(padding, std::ios::cur);
     }
 
@@ -61,13 +60,13 @@ void Image::read(const std::string& filename) {
         throw std::runtime_error("Error reading pixel data from: " + filename);
     }
 
-    // Normalise stored height to positive so write() can rely on it.
+  
     infoHeader_.biHeight = h;
 
-    // Normalise headers to standard 54-byte 24-bit BMP (strip V4/V5 extras).
-    infoHeader_.biSize      = sizeof(BITMAPINFOHEADER);             // 40
+
+    infoHeader_.biSize      = sizeof(BITMAPINFOHEADER);             
     fileHeader_.bfOffBits   = sizeof(BITMAPFILEHEADER)
-                            + sizeof(BITMAPINFOHEADER);             // 54
+                            + sizeof(BITMAPINFOHEADER);            
     infoHeader_.biSizeImage = static_cast<uint32_t>((w * 3 + padding) * h);
     fileHeader_.bfSize      = fileHeader_.bfOffBits + infoHeader_.biSizeImage;
 }
@@ -78,27 +77,25 @@ void Image::write(const std::string& filename) const {
         throw std::runtime_error("Could not open output file: " + filename);
     }
 
-    // --- Normalise headers to standard 54-byte 24-bit BMP --------------------
     const int32_t w       = width();
     const int32_t h       = height();
     const int     padding = paddingBytes();
 
-    // Ensure biSize/bfOffBits/biSizeImage/bfSize are correct regardless
-    // of whether the original BMP had an extended V4/V5 header.
+ 
     BITMAPFILEHEADER fhOut = fileHeader_;
     BITMAPINFOHEADER ihOut = infoHeader_;
 
-    ihOut.biSize      = sizeof(BITMAPINFOHEADER);                   // 40
+    ihOut.biSize      = sizeof(BITMAPINFOHEADER);              
     fhOut.bfOffBits   = sizeof(BITMAPFILEHEADER)
-                      + sizeof(BITMAPINFOHEADER);                   // 54
+                      + sizeof(BITMAPINFOHEADER);                
     ihOut.biSizeImage = static_cast<uint32_t>((w * 3 + padding) * h);
     fhOut.bfSize      = fhOut.bfOffBits + ihOut.biSizeImage;
 
-    // --- Write headers ------------------------------------------------------
     file.write(reinterpret_cast<const char*>(&fhOut), sizeof(fhOut));
     file.write(reinterpret_cast<const char*>(&ihOut), sizeof(ihOut));
 
-    // --- Write pixel data (top-down memory → bottom-up BMP) -----------------
+
+
     const uint8_t pad     = 0x00;
 
     for (int32_t row = h - 1; row >= 0; --row) {
@@ -116,10 +113,9 @@ void Image::write(const std::string& filename) const {
     }
 }
 
-// ── State Snapshot Accessors ───────────────────────────────────────────────
 
 std::vector<std::vector<RGBTRIPLE>> Image::getPixelsCopy() const {
-    return pixels_;   // implicit deep copy of the entire 2D vector
+    return pixels_;   
 }
 
 void Image::setPixels(const std::vector<std::vector<RGBTRIPLE>>& newPixels) {
@@ -141,10 +137,9 @@ void Image::setPixels(const std::vector<std::vector<RGBTRIPLE>>& newPixels) {
     pixels_ = newPixels;
 }
 
-// ── Analysis ───────────────────────────────────────────────────────────────
 
 void Image::printHistogram() const {
-    // 1D Frequency Array — O(W * H) scan
+
     std::vector<int> freq(256, 0);
 
     for (const auto& row : pixels_) {
@@ -154,9 +149,8 @@ void Image::printHistogram() const {
         }
     }
 
-    // Aggregate into 8 bins (each 32 levels wide)
     const int kNumBins  = 8;
-    const int kBinWidth = 256 / kNumBins;   // 32
+    const int kBinWidth = 256 / kNumBins;  
     std::vector<int> bins(static_cast<std::size_t>(kNumBins), 0);
 
     for (int i = 0; i < 256; ++i) {
@@ -164,10 +158,10 @@ void Image::printHistogram() const {
             freq[static_cast<std::size_t>(i)];
     }
 
-    // Find max bin count for bar scaling
+
     int maxBin = *std::max_element(bins.begin(), bins.end());
 
-    // Find peak intensity (luminance value with highest frequency)
+   
     int peakIntensity = 0;
     for (int i = 1; i < 256; ++i) {
         if (freq[static_cast<std::size_t>(i)] >
@@ -176,7 +170,7 @@ void Image::printHistogram() const {
         }
     }
 
-    // Print ASCII histogram
+  
     const int kBarMax = 40;
     std::cout << "\n--- Luminance Histogram ---\n";
     for (int b = 0; b < kNumBins; ++b) {
