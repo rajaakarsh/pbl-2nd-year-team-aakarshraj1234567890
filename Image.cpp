@@ -1,12 +1,11 @@
 #include "Image.hpp"
 
-#include <algorithm>  // std::max_element
+#include <algorithm>  
 #include <fstream>
-#include <iomanip>    // std::setw
+#include <iomanip>    
 #include <iostream>
 #include <stdexcept>
 
-// ── I/O ────────────────────────────────────────────────────────────────────
 
 void Image::read(const std::string& filename) {
     std::ifstream file(filename, std::ios::binary);
@@ -14,7 +13,7 @@ void Image::read(const std::string& filename) {
         throw std::runtime_error("Could not open input file: " + filename);
     }
 
-    // --- Read headers -------------------------------------------------------
+
     file.read(reinterpret_cast<char*>(&fileHeader_), sizeof(fileHeader_));
     file.read(reinterpret_cast<char*>(&infoHeader_), sizeof(infoHeader_));
 
@@ -22,7 +21,7 @@ void Image::read(const std::string& filename) {
         throw std::runtime_error("Error reading BMP headers from: " + filename);
     }
 
-    // --- Validate format ----------------------------------------------------
+   
     if (fileHeader_.bfType != 0x4D42) {
         throw std::runtime_error("Not a BMP file (bad magic number): " + filename);
     }
