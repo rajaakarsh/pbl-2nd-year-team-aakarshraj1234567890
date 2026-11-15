@@ -1,14 +1,6 @@
 #ifndef BMP_HPP
 #define BMP_HPP
 
-/**
- * @file Bmp.hpp
- * @brief Binary Data Abstraction — Packed structs for 24-bit BMP files.
- *
- * DS Concept:  Packed Structs — `#pragma pack(push, 1)` disables compiler
- *              byte-padding so struct layouts match the exact on-disk BMP
- *              binary format (14 + 40 = 54 header bytes).
- */
 
 #include <cstdint>
 
@@ -38,12 +30,7 @@ struct BITMAPINFOHEADER {
     uint32_t biClrImportant;  ///< Number of important colours (0 = all).
 };
 
-/**
- * @brief A single 24-bit pixel in BGR byte order.
- *
- * DS Concept:  Three contiguous bytes with no padding — matches the
- *              on-disk scanline layout of a 24-bit BMP.
- */
+
 struct RGBTRIPLE {
     uint8_t rgbtBlue;
     uint8_t rgbtGreen;
